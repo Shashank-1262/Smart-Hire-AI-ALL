@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timedelta
 import random
 
-DB = r"c:\Users\sahit\Downloads\Campus-Recruitment-Management-System-master\SmartHire-AI\smarthire.db"
+DB = os.path.join(os.path.dirname(__file__), "smarthire.db")
 
 def get_db():
     conn = sqlite3.connect(DB)

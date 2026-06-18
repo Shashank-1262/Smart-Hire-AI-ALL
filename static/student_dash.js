@@ -121,13 +121,21 @@ function rmAnalyze() {
   document.getElementById('rm-loading').style.display = 'block';
   document.getElementById('rm-analyze-btn').disabled = true;
 
-  fetch('/ai/extract', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: jd + ' ' + rmResumeText }) })
+  const fileInput = document.getElementById('rm-resume-input');
+  const file = fileInput.files[0];
+
+  const formData = new FormData();
+  formData.append('jd', jd);
+  if (file) {
+    formData.append('resume', file);
+  }
+
+  fetch('/ai/resume_match', { method: 'POST', body: formData })
     .then(r => r.json()).then(data => {
-      const jdSkills = data.skills;
-      const mySkills = window._mySkills || [];
-      const matched = jdSkills.filter(s => mySkills.some(m => m.toLowerCase() === s.toLowerCase()));
-      const missing = jdSkills.filter(s => !mySkills.some(m => m.toLowerCase() === s.toLowerCase()));
-      const pct = jdSkills.length ? Math.round((matched.length / jdSkills.length) * 100) : Math.min(75, mySkills.length * 10);
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      const pct = data.score;
 
       document.getElementById('rm-loading').style.display = 'none';
       document.getElementById('rm-result-output').style.display = 'block';
@@ -138,27 +146,25 @@ function rmAnalyze() {
       circle.style.stroke = pct >= 70 ? '#4f46e5' : pct >= 45 ? '#d97706' : '#dc2626';
       document.getElementById('rm-score-pct').textContent = pct + '%';
 
-      const verdict = pct >= 75 ? 'Excellent Match' : pct >= 50 ? 'Good Match' : 'Needs Improvement';
-      const summary = pct >= 75 ? 'Your resume matches very well with this job description.' : pct >= 50 ? 'Your profile partially matches. Consider adding missing skills.' : 'Several key skills are missing from your profile.';
+      const verdict = data.verdict;
+      const summary = data.summary;
       document.getElementById('rm-verdict-text').textContent = verdict;
       document.getElementById('rm-verdict-summary').textContent = summary;
 
-      const allSkills = [...matched, ...missing.slice(0, 3)];
-      document.getElementById('rm-skills-list').innerHTML = allSkills.map(s => {
-        const isMatch = matched.includes(s);
-        const score = isMatch ? Math.floor(85 + Math.random() * 14) : Math.floor(30 + Math.random() * 30);
+      document.getElementById('rm-skills-list').innerHTML = data.skills.map(s => {
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f3f4f6;">
-          <span style="font-size:0.85rem;color:#374151;">${s}</span>
-          <span style="font-size:0.82rem;font-weight:700;color:${isMatch ? '#059669' : '#dc2626'};">${score}%</span>
+          <span style="font-size:0.85rem;color:#374151;">${s.name}</span>
+          <span style="font-size:0.82rem;font-weight:700;color:${s.matched ? '#059669' : '#dc2626'};">${s.score}%</span>
         </div>`;
       }).join('');
 
       document.getElementById('rm-analyze-btn').disabled = false;
       incTestCount('resume');
-    }).catch(() => {
+    }).catch(err => {
       document.getElementById('rm-loading').style.display = 'none';
       document.getElementById('rm-result-empty').style.display = 'block';
-      document.getElementById('rm-result-empty').innerHTML = '<p style="color:#dc2626;font-size:0.85rem;">Error analyzing. Please try again.</p>';
+      const errMsg = err.message || 'Error analyzing. Please try again.';
+      document.getElementById('rm-result-empty').innerHTML = `<p style="color:#dc2626;font-size:0.85rem;">${errMsg}</p>`;
       document.getElementById('rm-analyze-btn').disabled = false;
     });
 }

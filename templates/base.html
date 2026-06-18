@@ -416,10 +416,16 @@ function sendChat() {
   const msgs = document.getElementById('chat-msgs');
   msgs.innerHTML += `<div class="chat-msg user">${msg}</div>`;
   inp.value = '';
-  $.post('/chatbot', JSON.stringify({message: msg}), function(d) {
-    msgs.innerHTML += `<div class="chat-msg bot">${d.reply}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 'json');
+  $.ajax({
+    url: '/chatbot',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({message: msg}),
+    success: function(d) {
+      msgs.innerHTML += `<div class="chat-msg bot">${d.reply}</div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  });
   msgs.scrollTop = msgs.scrollHeight;
 }
 </script>
