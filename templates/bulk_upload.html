@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block nav %}
+  <a href="{% if session.get('role')=='admin' %}/admin{% else %}/company{% endif %}" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Back</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:720px;margin:0 auto;">
+  <h1 class="page-title"><i class="fa-solid fa-users-gear" style="color:#4f46e5;margin-right:8px;"></i>Bulk Candidate Import</h1>
+  <p class="page-sub">Upload a CSV to import candidates and auto-screen them against a drive.</p>
+
+  {% if success %}
+  <div class="alert alert-success">
+    <i class="fa-solid fa-circle-check"></i>
+    <div>Imported <strong>{{ imported }}</strong> of <strong>{{ total }}</strong> candidates successfully.
+    {% if errors %}<br><strong>Errors:</strong> {% for e in errors %}<div style="font-size:0.82rem;">• {{ e }}</div>{% endfor %}{% endif %}
+    </div>
+  </div>
+  {% elif error %}
+  <div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form action="/bulk/upload" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Select Drive (optional — to auto-apply all imported candidates)</label>
+        <select name="drive_id" class="form-control">
+          <option value="0">— Import only, no auto-apply —</option>
+          {% for d in drives %}
+          <option value="{{ d.id }}">{{ d.title }}{% if d['company_name'] is defined and d['company_name'] %} ({{ d['company_name'] }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Upload CSV File</label>
+        <div style="border:2px dashed #c7d2fe;border-radius:12px;padding:32px;text-align:center;background:#f8f9ff;">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:#4f46e5;opacity:.7;display:block;margin-bottom:10px;"></i>
+          <p style="font-size:0.85rem;color:#6b7280;margin-bottom:12px;">CSV must have columns: <code>name, email</code><br>Optional: <code>phone, branch, degree, year, cgpa, skills</code></p>
+          <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+        </div>
+      </div>
+      <a href="/static/sample_candidates.csv" style="font-size:0.82rem;color:#4f46e5;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;">
+        <i class="fa-solid fa-download"></i> Download sample CSV template
+      </a>
+      <div style="margin-top:16px;display:flex;gap:12px;">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-upload"></i> Import Candidates</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

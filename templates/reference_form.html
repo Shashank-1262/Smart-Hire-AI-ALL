@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block nav %}{% endblock %}
+{% block content %}
+<div style="max-width:580px;margin:0 auto;">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.5rem;color:#fff;">
+        <i class="fa-solid fa-user-check"></i>
+      </div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:6px;">Reference Check Request</h2>
+      <p style="color:#6b7280;font-size:0.9rem;">You have been requested to provide a reference for <strong>{{ student.name }}</strong>.</p>
+    </div>
+
+    <div style="background:#eef2ff;border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:0.85rem;color:#4f46e5;">
+      <strong>Referee:</strong> {{ ref.referee_name }} ({{ ref.referee_relation }})
+    </div>
+
+    <form action="/reference/{{ ref.token }}" method="POST">
+      <div class="form-group">
+        <label>How long have you known {{ student.name.split()[0] }}?</label>
+        <select name="duration" class="form-control" required>
+          <option value="">Select duration</option>
+          {% for d in ['Less than 1 year','1-2 years','2-5 years','More than 5 years'] %}
+          <option>{{ d }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>In what capacity do you know them?</label>
+        <input type="text" name="capacity" class="form-control" placeholder="e.g. Academic Supervisor, Manager" required>
+      </div>
+      <div class="form-group">
+        <label>Overall Rating (1–5)</label>
+        <div style="display:flex;gap:10px;">
+          {% for i in range(1,6) %}
+          <label style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
+            <input type="radio" name="rating" value="{{ i }}" style="accent-color:#4f46e5;" {% if i==4 %}checked{% endif %}>
+            <span style="font-size:0.75rem;color:#6b7280;">{{ i }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Reference Comments</label>
+        <textarea name="response" class="form-control" rows="5" placeholder="Please describe the candidate's skills, work ethic, and suitability for the role…" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Submit Reference</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

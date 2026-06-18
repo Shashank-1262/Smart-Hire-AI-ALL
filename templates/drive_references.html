@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block nav %}
+  <a href="/drive/{{ drive.id }}/applicants" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Back</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Reference Checks — {{ drive.title }}</h1>
+<p class="page-sub">Reference requests sent and responses received for this drive.</p>
+{% if refs %}
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>Candidate</th><th>Referee</th><th>Relation</th><th>Status</th><th>Rating</th><th>Response</th><th>Submitted</th></tr></thead>
+    <tbody>
+      {% for r in refs %}
+      <tr>
+        <td>
+          <div style="font-weight:600;color:#111827;">{{ r.student_name }}</div>
+          <div style="font-size:0.75rem;color:#9ca3af;">{{ r.student_email }}</div>
+        </td>
+        <td>
+          <div style="font-weight:500;">{{ r.referee_name }}</div>
+          <div style="font-size:0.75rem;color:#6b7280;">{{ r.referee_email }}</div>
+        </td>
+        <td style="color:#6b7280;">{{ r.referee_relation }}</td>
+        <td>
+          {% if r.status == 'submitted' %}
+          <span class="badge badge-selected">✓ Received</span>
+          {% else %}
+          <span class="badge badge-test">⏳ Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if r.rating %}
+          <div style="display:flex;gap:2px;">
+            {% for i in range(1,6) %}
+            <i class="fa-solid fa-star" style="font-size:0.8rem;color:{% if i <= r.rating %}#d97706{% else %}#e2e5f0{% endif %};"></i>
+            {% endfor %}
+          </div>
+          {% else %}—{% endif %}
+        </td>
+        <td style="max-width:240px;font-size:0.82rem;color:#374151;">{{ r.response[:120] }}{% if r.response|length > 120 %}…{% endif %}</td>
+        <td style="color:#6b7280;font-size:0.78rem;">{{ r.submitted_on[:10] if r.submitted_on else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:56px;color:#9ca3af;">
+  <i class="fa-solid fa-user-check" style="font-size:3rem;opacity:.3;display:block;margin-bottom:12px;"></i>
+  <p>No reference requests sent for this drive yet.</p>
+  <p style="font-size:0.82rem;margin-top:6px;">Use the <strong>Request Reference</strong> button on the applicants page.</p>
+</div>
+{% endif %}
+{% endblock %}

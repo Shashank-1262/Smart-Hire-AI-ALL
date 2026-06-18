@@ -1,0 +1,6 @@
+name,email,phone,branch,degree,year,cgpa,skills
+Ravi Shankar,ravi.shankar@example.com,9876500001,CSE,B.Tech,4,8.2,"Python,SQL,Django"
+Meena Krishnan,meena.k@example.com,9876500002,IT,B.Tech,4,7.9,"Java,Spring Boot,MySQL"
+Aryan Das,aryan.das@example.com,9876500003,ECE,B.Tech,4,7.5,"C++,Embedded Systems"
+Sunita Rao,sunita.rao@example.com,9876500004,CSE,B.Tech,4,9.0,"Machine Learning,Python,TensorFlow"
+Vijay Kumar,vijay.kumar@example.com,9876500005,MECH,B.Tech,4,7.1,"AutoCAD,MATLAB"

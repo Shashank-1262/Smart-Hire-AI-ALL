@@ -13,7 +13,7 @@ body { background:#f5f7ff !important; }
 }
 .cd-sidebar .nav-item {
   display:flex; align-items:center; gap:9px;
-  padding:9px 18px; font-size:0.82rem; font-weight:500;
+  padding:6px 18px; font-size:0.82rem; font-weight:500;
   color:#6b7280; cursor:pointer; text-decoration:none;
   transition:all 0.15s; border-left:3px solid transparent;
 }
@@ -91,30 +91,39 @@ body { background:#f5f7ff !important; }
 
     <h1 style="font-size:1.1rem;font-weight:800;color:#111827;margin-bottom:16px;">Applicants — {{ drive['title'] }}</h1>
 
+    <!-- Quick-action bar for new features -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <a href="/drive/{{ drive['id'] }}/diversity" class="btn btn-outline btn-sm"><i class="fa-solid fa-chart-pie"></i> Diversity Report</a>
+      <a href="/drive/{{ drive['id'] }}/assessment_results" class="btn btn-outline btn-sm"><i class="fa-solid fa-clipboard-question"></i> Test Results</a>
+      <a href="/drive/{{ drive['id'] }}/references" class="btn btn-outline btn-sm"><i class="fa-solid fa-user-check"></i> References</a>
+      <a href="/assessment/create" class="btn btn-outline btn-sm"><i class="fa-solid fa-plus"></i> Create Test</a>
+      <a href="/analytics" class="btn btn-outline btn-sm"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+    </div>
+
     <!-- Search + filter + export bar -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <form method="GET" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
       <div class="search-wrap">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="app-search" placeholder="Search applicants…" oninput="filterApps()">
+        <input type="text" name="q" value="{{ q_filter }}" id="app-search" placeholder="Search applicants…">
       </div>
-      <select id="app-status-filter" onchange="filterApps()" style="padding:8px 12px;border:1.5px solid #e2e5f0;border-radius:9px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;color:#374151;background:#fff;">
+      <select name="status" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e5f0;border-radius:9px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;color:#374151;background:#fff;">
         <option value="">All Status</option>
-        <option value="applied">Applied</option>
-        <option value="eligible">Eligible</option>
-        <option value="test">Test</option>
-        <option value="interview">Interview</option>
-        <option value="selected">Selected</option>
-        <option value="rejected">Rejected</option>
+        {% for s in ['applied','eligible','test','interview','selected','rejected'] %}
+        <option value="{{ s }}" {% if status_filter==s %}selected{% endif %}>{{ s|capitalize }}</option>
+        {% endfor %}
       </select>
+      <select name="sort" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e5f0;border-radius:9px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;color:#374151;background:#fff;">
+        <option value="ai_score" {% if sort_by=='ai_score' %}selected{% endif %}>Sort: AI Score</option>
+        <option value="date" {% if sort_by=='date' %}selected{% endif %}>Sort: Date</option>
+      </select>
+      <button type="submit" style="padding:8px 14px;background:#4f46e5;color:#fff;border:none;border-radius:9px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Filter</button>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:#6b7280;cursor:pointer;">
-          <i class="fa-solid fa-sliders"></i> Filters
-        </div>
-        <button onclick="exportCSV()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid #e2e5f0;border-radius:9px;background:#fff;font-size:0.8rem;font-weight:600;color:#374151;cursor:pointer;font-family:'Inter',sans-serif;">
+        <a href="/offer/generate" class="btn btn-success btn-sm"><i class="fa-solid fa-file-signature"></i> Offer Letter</a>
+        <button onclick="exportCSV()" type="button" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid #e2e5f0;border-radius:9px;background:#fff;font-size:0.8rem;font-weight:600;color:#374151;cursor:pointer;font-family:'Inter',sans-serif;">
           <i class="fa-solid fa-download"></i> Export
         </button>
       </div>
-    </div>
+    </form>
 
     <!-- Applicants table -->
     {% if apps %}
@@ -169,7 +178,7 @@ body { background:#f5f7ff !important; }
               </span>
             </td>
             <td>
-              <div style="display:flex;align-items:center;gap:6px;">
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
                 <form action="/app/{{ a['id'] }}/status" method="POST" style="display:flex;gap:5px;align-items:center;">
                   <select name="status" style="padding:5px 8px;border:1.5px solid #e2e5f0;border-radius:8px;font-size:0.78rem;font-family:'Inter',sans-serif;outline:none;color:#374151;background:#fff;cursor:pointer;" onchange="this.form.submit()">
                     <option value="applied"   {% if a['status']=='applied'   %}selected{% endif %}>Applied</option>
@@ -180,10 +189,32 @@ body { background:#f5f7ff !important; }
                     <option value="rejected"  {% if a['status']=='rejected'  %}selected{% endif %}>Rejected</option>
                   </select>
                 </form>
-                <div style="width:28px;height:28px;border-radius:7px;background:#f8f9ff;border:1px solid #e2e5f0;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="{{ a['sname'] }}'s skills: {{ a['skills'] }}">
-                  <i class="fa-solid fa-ellipsis-vertical" style="font-size:0.75rem;color:#6b7280;"></i>
-                </div>
+                <!-- Schedule interview button -->
+                <button onclick="openIvModal({{ a['id'] }},'{{ a['sname'] }}')" title="Schedule Interview"
+                  style="width:28px;height:28px;border-radius:7px;background:#eef2ff;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+                  <i class="fa-solid fa-calendar-plus" style="font-size:0.72rem;color:#4f46e5;"></i>
+                </button>
+                <!-- Reference request button -->
+                <button onclick="openRefModal({{ a['id'] }},'{{ a['sname'] }}')" title="Request Reference"
+                  style="width:28px;height:28px;border-radius:7px;background:#f0fdf4;border:1px solid #6ee7b7;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+                  <i class="fa-solid fa-user-check" style="font-size:0.72rem;color:#059669;"></i>
+                </button>
+                {% if a['resume'] %}
+                <a href="/resume/{{ a['resume'] }}" target="_blank" title="Download Resume"
+                  style="width:28px;height:28px;border-radius:7px;background:#f8f9ff;border:1px solid #e2e5f0;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;">
+                  <i class="fa-solid fa-file-pdf" style="font-size:0.72rem;color:#dc2626;"></i>
+                </a>
+                {% endif %}
               </div>
+              {% if a['iv_status'] == 'confirmed' and a['confirmed_slot'] %}
+              <div style="font-size:0.68rem;color:#059669;margin-top:3px;"><i class="fa-solid fa-calendar-check"></i> {{ a['confirmed_slot'] }}
+                {% if a['proposed_slots'] and 'http' in (a['proposed_slots'] or '') %}
+                  <a href="{{ a['proposed_slots'] }}" target="_blank" style="margin-left:6px;color:#4f46e5;font-weight:600;"><i class="fa-solid fa-video"></i> Join</a>
+                {% endif %}
+              </div>
+              {% elif a['proposed_slots'] %}
+              <div style="font-size:0.68rem;color:#d97706;margin-top:3px;"><i class="fa-solid fa-clock"></i> Awaiting confirmation</div>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -209,16 +240,58 @@ body { background:#f5f7ff !important; }
   </div><!-- end da-main -->
 </div><!-- end da-shell -->
 
+<!-- Interview scheduling modal -->
+<div id="iv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;max-width:480px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="font-size:1rem;font-weight:700;color:#111827;">Schedule Interview — <span id="iv-name"></span></h3>
+      <button onclick="closeIv()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#9ca3af;">✕</button>
+    </div>
+    <form id="iv-form" method="POST">
+      <div class="form-group">
+        <label>Proposed Slots (comma-separated dates/times)</label>
+        <input type="text" name="slots" class="form-control" placeholder="e.g. 2025-07-10 10:00 AM, 2025-07-11 2:00 PM" required>
+      </div>
+      <div class="form-group">
+        <label>Interviewer Name</label>
+        <input type="text" name="interviewer" class="form-control" placeholder="Interviewer / panel name">
+      </div>
+      <div class="g2" style="gap:12px;">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Video Platform</label>
+          <select name="video_platform" class="form-control">
+            <option value="zoom">Zoom</option>
+            <option value="meet">Google Meet</option>
+            <option value="teams">Microsoft Teams</option>
+            <option value="webex">Webex</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Video / Meeting Link</label>
+          <input type="url" name="video_link" class="form-control" placeholder="https://zoom.us/j/...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes (passcode, agenda, etc.)</label>
+        <textarea name="notes" class="form-control" rows="2" placeholder="Meeting passcode, agenda, dress code…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">Send Interview Invite</button>
+        <button type="button" onclick="closeIv()" class="btn btn-ghost">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-function filterApps() {
-  const q = document.getElementById('app-search').value.toLowerCase();
-  const st = document.getElementById('app-status-filter').value;
-  document.querySelectorAll('.app-row').forEach(r => {
-    const nameMatch = !q || r.dataset.name.includes(q) || r.dataset.email.includes(q);
-    const statusMatch = !st || r.dataset.status === st;
-    r.style.display = (nameMatch && statusMatch) ? '' : 'none';
-  });
+function openIvModal(appId, name) {
+  document.getElementById('iv-name').textContent = name;
+  document.getElementById('iv-form').action = '/app/' + appId + '/video_interview';
+  document.getElementById('iv-modal').style.display = 'flex';
 }
+function closeIv() { document.getElementById('iv-modal').style.display = 'none'; }
+document.getElementById('iv-modal').addEventListener('click', function(e){ if(e.target===this)closeIv(); });
 
 function exportCSV() {
   const rows = [['Name','Email','CGPA','AI Match','Applied On','Status']];
@@ -238,5 +311,49 @@ function exportCSV() {
   a.download = 'applicants.csv';
   a.click();
 }
+</script>
+
+<!-- Reference Request modal -->
+<div id="ref-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2001;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;max-width:460px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-size:1rem;font-weight:700;color:#111827;"><i class="fa-solid fa-user-check" style="color:#059669;margin-right:8px;"></i>Request Reference — <span id="ref-name"></span></h3>
+      <button onclick="closeRef()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#9ca3af;">✕</button>
+    </div>
+    <form id="ref-form" method="POST">
+      <div class="form-group">
+        <label>Referee Name</label>
+        <input type="text" name="referee_name" class="form-control" placeholder="Full name of referee" required>
+      </div>
+      <div class="form-group">
+        <label>Referee Email</label>
+        <input type="email" name="referee_email" class="form-control" placeholder="referee@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Relationship to Candidate</label>
+        <select name="referee_relation" class="form-control">
+          <option value="Academic Supervisor">Academic Supervisor</option>
+          <option value="Previous Manager">Previous Manager</option>
+          <option value="Colleague">Colleague</option>
+          <option value="Mentor">Mentor</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-success">Send Reference Request</button>
+        <button type="button" onclick="closeRef()" class="btn btn-ghost">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openRefModal(appId, name) {
+  document.getElementById('ref-name').textContent = name;
+  document.getElementById('ref-form').action = '/app/' + appId + '/reference_request';
+  document.getElementById('ref-modal').style.display = 'flex';
+}
+function closeRef() { document.getElementById('ref-modal').style.display = 'none'; }
+document.getElementById('ref-modal').addEventListener('click', function(e){ if(e.target===this) closeRef(); });
 </script>
 {% endblock %}

@@ -36,18 +36,18 @@
             <label>Location</label>
             <input type="text" name="location" class="form-control" placeholder="e.g. Bangalore / Remote" required>
           </div>
-          <div class="form-group">
-            <label>Salary (LPA)</label>
-            <input type="number" step="0.1" name="salary" class="form-control" placeholder="e.g. 8.5" required>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>Salary Min (LPA)</label><input type="number" step="0.1" name="salary_min" class="form-control" placeholder="e.g. 6" required></div>
+            <div class="form-group"><label>Salary Max (LPA)</label><input type="number" step="0.1" name="salary_max" class="form-control" placeholder="e.g. 10" required></div>
           </div>
-          <div class="form-group">
-            <label>Application Deadline</label>
-            <input type="date" name="deadline" class="form-control" required>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>Job Type</label><select name="job_type" class="form-control">{% for jt in ['Full-time','Part-time','Internship','Contract','Remote'] %}<option>{{ jt }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>Experience Level</label><select name="experience_level" class="form-control">{% for el in ['Entry Level','Mid Level','Senior Level','Internship'] %}<option>{{ el }}</option>{% endfor %}</select></div>
           </div>
-          <div class="form-group">
-            <label>Job Description</label>
-            <textarea name="description" class="form-control" rows="5" placeholder="Describe the role, responsibilities, and what you're looking for..."></textarea>
-          </div>
+          <div class="form-group"><label>Application Deadline</label><input type="date" name="deadline" class="form-control" required></div>
+          <div class="form-group"><label>Job Description</label><textarea name="description" class="form-control" rows="3" placeholder="Describe the role, responsibilities..."></textarea></div>
+          <div class="form-group"><label>Requirements</label><textarea name="requirements" class="form-control" rows="2" placeholder="Specific requirements, qualifications..."></textarea></div>
+          <div class="form-group" style="display:flex;align-items:center;gap:10px;"><input type="checkbox" name="is_public" id="is_public" checked style="width:16px;height:16px;accent-color:#4f46e5;"><label for="is_public" style="font-size:0.875rem;font-weight:500;cursor:pointer;margin-bottom:0;">Post to public Job Board</label></div>
         </div>
         <div>
           <p class="section-label">Eligibility Criteria</p>

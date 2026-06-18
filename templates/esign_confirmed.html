@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block nav %}{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:0 auto;text-align:center;">
+  <div class="card" style="padding:56px 40px;">
+    <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2.2rem;color:#fff;">
+      <i class="fa-solid fa-pen-nib"></i>
+    </div>
+    <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:10px;">Offer Accepted! 🎉</h2>
+    <p style="color:#6b7280;font-size:0.95rem;margin-bottom:24px;">
+      You have successfully signed the offer letter from <strong>{{ offer.company_name }}</strong>.
+      Your HR team will reach out with next steps.
+    </p>
+    <div style="background:#eef2ff;border-radius:10px;padding:14px 20px;text-align:left;">
+      <div style="font-size:0.82rem;color:#4f46e5;font-weight:700;margin-bottom:8px;">Offer Summary</div>
+      <div style="font-size:0.85rem;color:#374151;display:flex;flex-direction:column;gap:4px;">
+        <div><strong>Role:</strong> {{ offer.role }}</div>
+        <div><strong>Company:</strong> {{ offer.company_name }}</div>
+        <div><strong>Joining Date:</strong> {{ offer.joining_date }}</div>
+        <div><strong>CTC:</strong> {{ offer.salary }}</div>
+      </div>
+    </div>
+    {% if session.get('role') == 'student' %}
+    <a href="/student" class="btn btn-primary" style="margin-top:24px;">Go to Dashboard</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

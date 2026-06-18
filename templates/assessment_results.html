@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block nav %}
+  <a href="/drive/{{ drive.id }}/applicants" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Back</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Assessment Results — {{ drive.title }}</h1>
+<p class="page-sub">{{ assessment.title if assessment else 'No assessment created' }}</p>
+{% if not assessment %}
+<div class="card" style="text-align:center;padding:48px;">
+  <i class="fa-solid fa-clipboard-question" style="font-size:3rem;opacity:.3;display:block;margin-bottom:12px;color:#9ca3af;"></i>
+  <p>No assessment has been created for this drive yet.</p>
+  <a href="/assessment/create" class="btn btn-primary" style="margin-top:16px;">Create Assessment</a>
+</div>
+{% elif not results %}
+<div class="card" style="text-align:center;padding:48px;color:#9ca3af;">
+  <i class="fa-solid fa-users" style="font-size:3rem;opacity:.3;display:block;margin-bottom:12px;"></i>
+  <p>No candidates have taken this assessment yet.</p>
+</div>
+{% else %}
+<div class="card" style="padding:0;overflow:hidden;">
+  <table class="tbl">
+    <thead><tr><th>Candidate</th><th>Branch</th><th>CGPA</th><th>Score</th><th>Result</th><th>Submitted</th></tr></thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td>
+          <div style="font-weight:600;color:#111827;">{{ r.name }}</div>
+          <div style="font-size:0.75rem;color:#9ca3af;">{{ r.email }}</div>
+        </td>
+        <td>{{ r.branch }}</td>
+        <td style="font-weight:600;">{{ r.cgpa }}</td>
+        <td>
+          <span style="font-size:1rem;font-weight:800;color:{% if r.score >= assessment.passing_score %}#059669{% else %}#dc2626{% endif %};">{{ r.score }}%</span>
+        </td>
+        <td>
+          {% if r.score >= assessment.passing_score %}
+          <span class="badge badge-selected">✓ Passed</span>
+          {% else %}
+          <span class="badge badge-rejected">✗ Failed</span>
+          {% endif %}
+        </td>
+        <td style="color:#6b7280;font-size:0.82rem;">{{ r.submitted_on[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

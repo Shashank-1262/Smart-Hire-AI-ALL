@@ -20,7 +20,7 @@ body { background: #f5f7ff !important; }
 }
 .sd-sidebar .nav-item {
   display: flex; align-items: center; gap: 9px;
-  padding: 9px 18px;
+  padding: 6px 18px;
   font-size: 0.82rem; font-weight: 500;
   color: #6b7280; cursor: pointer;
   text-decoration: none; transition: all 0.15s;
@@ -252,6 +252,13 @@ body { background: #f5f7ff !important; }
     <a class="nav-item" id="nav-applications" onclick="showSection('applications')">
       <i class="fa-solid fa-file-lines"></i> My Applications
     </a>
+    <a class="nav-item" id="nav-tracker" href="/student/tracker">
+      <i class="fa-solid fa-route"></i> Tracker
+    </a>
+    <a class="nav-item" id="nav-notifications" onclick="showSection('notifications')">
+      <i class="fa-solid fa-bell"></i> Notifications
+      {% if unread > 0 %}<span style="background:#dc2626;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.65rem;font-weight:700;margin-left:auto;">{{ unread }}</span>{% endif %}
+    </a>
     <a class="nav-item" id="nav-tests" onclick="showSection('tests')">
       <i class="fa-solid fa-flask"></i> Demo Tests
     </a>
@@ -464,7 +471,11 @@ body { background: #f5f7ff !important; }
 
         <!-- Personal Information card -->
         <div class="panel">
-          <div style="font-size:0.95rem;font-weight:700;color:#111827;margin-bottom:18px;">Personal Information</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <div style="font-size:0.95rem;font-weight:700;color:#111827;">Personal Information</div>
+            <button onclick="toggleEditProfile()" id="edit-btn" style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-pen" style="margin-right:4px;"></i>Edit</button>
+          </div>
+          <div id="profile-view">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;">
             <div style="padding:10px 0 16px;">
               <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:4px;">Full Name</div>
@@ -488,10 +499,38 @@ body { background: #f5f7ff !important; }
               <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:4px;">Date of Birth</div>
               <div style="font-size:0.875rem;font-weight:600;color:#111827;">{{ student['dob'] or '—' }}</div>
             </div>
-            <div style="padding:16px 0 6px;">
+            <div style="padding:16px 0 6pt;">
               <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:4px;">Gender</div>
               <div style="font-size:0.875rem;font-weight:600;color:#111827;">{{ student['gender'] or '—' }}</div>
             </div>
+          </div>
+          </div>
+          <!-- Edit form -->
+          <div id="profile-edit" style="display:none;">
+          <form action="/student/profile/update" method="POST">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div class="form-group"><label>Full Name</label><input type="text" name="name" class="form-control" value="{{ student['name'] }}" required></div>
+              <div class="form-group"><label>Phone</label><input type="text" name="phone" class="form-control" value="{{ student['phone'] or '' }}"></div>
+              <div class="form-group"><label>Date of Birth</label><input type="date" name="dob" class="form-control" value="{{ student['dob'] or '' }}"></div>
+              <div class="form-group"><label>Gender</label><select name="gender" class="form-control"><option value="">—</option><option {% if student['gender']=='Male' %}selected{% endif %}>Male</option><option {% if student['gender']=='Female' %}selected{% endif %}>Female</option><option {% if student['gender']=='Other' %}selected{% endif %}>Other</option></select></div>
+              <div class="form-group"><label>Location</label><input type="text" name="location" class="form-control" value="{{ student['location'] or '' }}"></div>
+              <div class="form-group"><label>Branch</label><input type="text" name="branch" class="form-control" value="{{ student['branch'] or '' }}"></div>
+              <div class="form-group"><label>Degree</label><select name="degree" class="form-control"><option {% if student['degree']=='B.Tech' %}selected{% endif %}>B.Tech</option><option {% if student['degree']=='M.Tech' %}selected{% endif %}>M.Tech</option><option {% if student['degree']=='BCA' %}selected{% endif %}>BCA</option><option {% if student['degree']=='MCA' %}selected{% endif %}>MCA</option></select></div>
+              <div class="form-group"><label>Year of Passing</label><input type="number" name="year" class="form-control" value="{{ student['year'] or '' }}"></div>
+              <div class="form-group"><label>CGPA</label><input type="number" step="0.01" name="cgpa" class="form-control" value="{{ student['cgpa'] or '' }}"></div>
+              <div class="form-group"><label>Telegram Chat ID</label><input type="text" name="telegram_chat_id" class="form-control" value="{{ student['telegram_chat_id'] or '' }}" placeholder="Get from @userinfobot on Telegram"></div>
+              <div class="form-group"><label>12th %</label><input type="number" step="0.1" name="p12" class="form-control" value="{{ student['p12'] or '' }}"></div>
+              <div class="form-group"><label>10th %</label><input type="number" step="0.1" name="p10" class="form-control" value="{{ student['p10'] or '' }}"></div>
+            </div>
+            <div class="form-group"><label>Skills (comma-separated)</label><input type="text" name="skills" class="form-control" value="{{ student['skills'] or '' }}"></div>
+            <div class="form-group"><label>Bio</label><textarea name="bio" class="form-control" rows="2">{{ student['bio'] or '' }}</textarea></div>
+            <div class="form-group"><label>Experience</label><textarea name="experience" class="form-control" rows="2">{{ student['experience'] or '' }}</textarea></div>
+            <div class="form-group"><label>Education</label><textarea name="education" class="form-control" rows="2">{{ student['education'] or '' }}</textarea></div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+              <button type="button" onclick="toggleEditProfile()" class="btn btn-ghost btn-sm">Cancel</button>
+            </div>
+          </form>
           </div>
         </div>
       </div>
@@ -597,6 +636,14 @@ body { background: #f5f7ff !important; }
               margin-top:10px;font-size:0.78rem;color:#4f46e5;font-weight:600;cursor:pointer;">
               <i class="fa-solid fa-arrow-up-from-bracket"></i> Replace resume
             </label>
+            <button onclick="parseResume()" type="button"
+              style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;margin-left:8px;
+                     font-size:0.78rem;color:#059669;font-weight:600;cursor:pointer;
+                     background:#d1fae5;border:1px solid #6ee7b7;border-radius:7px;padding:5px 12px;
+                     font-family:'Inter',sans-serif;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-parse skills
+            </button>
+            <div id="parse-result" style="display:none;margin-top:10px;background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#374151;"></div>
             {% else %}
             <label for="resume-input" style="display:flex;flex-direction:column;align-items:center;
               justify-content:center;gap:8px;border:2px dashed #c7d2fe;border-radius:10px;
@@ -680,6 +727,14 @@ body { background: #f5f7ff !important; }
                     {% elif s=='selected' %}Selected
                     {% else %}Rejected{% endif %}
                   </span>
+                  {% if a['iv_status']=='confirmed' and a['confirmed_slot'] %}
+                  <div style="font-size:0.7rem;color:#059669;margin-top:3px;"><i class="fa-solid fa-calendar-check"></i> {{ a['confirmed_slot'] }}</div>
+                  {% elif a['proposed_slots'] and a['iv_status']!='confirmed' %}
+                  <button onclick="openSlotModal({{ loop.index }}, '{{ a['iv_id'] }}', '{{ a['proposed_slots'] }}')"
+                    style="margin-top:5px;display:block;background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:6px;padding:3px 10px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
+                    Confirm Slot
+                  </button>
+                  {% endif %}
                 </td>
               </tr>
               {% endfor %}
@@ -955,6 +1010,41 @@ body { background: #f5f7ff !important; }
 
     </div>
 
+
+    <!-- ══════════ NOTIFICATIONS ══════════ -->
+    <div class="sd-section" id="section-notifications">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h1 style="font-size:1.1rem;font-weight:800;color:#111827;">Notifications</h1>
+        {% if unread > 0 %}
+        <button onclick="markRead()" style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Mark all read</button>
+        {% endif %}
+      </div>
+      {% if notifs %}
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for n in notifs %}
+        <div style="background:#fff;border:1px solid {% if not n.is_read %}#c7d2fe{% else %}#e2e5f0{% endif %};border-radius:12px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;{% if not n.is_read %}background:#f8f9ff;{% endif %}">
+          <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.95rem;
+            {% if n.type=='success' %}background:#d1fae5;color:#059669;
+            {% elif n.type=='danger' %}background:#fee2e2;color:#dc2626;
+            {% else %}background:#eef2ff;color:#4f46e5;{% endif %}">
+            <i class="fa-solid {% if n.type=='success' %}fa-circle-check{% elif n.type=='danger' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:0.875rem;font-weight:{% if not n.is_read %}700{% else %}500{% endif %};color:#111827;">{{ n.title }}</div>
+            <div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">{{ n.message }}</div>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:4px;">{{ n.created[:16] }}</div>
+          </div>
+          {% if not n.is_read %}<span style="width:8px;height:8px;border-radius:50%;background:#4f46e5;flex-shrink:0;margin-top:4px;"></span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:48px;color:#9ca3af;">
+        <i class="fa-solid fa-bell-slash" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:12px;"></i>
+        <p style="font-size:0.9rem;">No notifications yet.</p>
+      </div>
+      {% endif %}
+    </div>
 
     <!-- ══════════ DEMO TESTS ══════════ -->
     <div class="sd-section" id="section-tests">
@@ -1290,6 +1380,67 @@ window._mySkills  = {{ skills_list | tojson }};
 </script>
 <script src="/static/student_dash.js"></script>
 <script>
+function parseResume() {
+  const btn = document.querySelector('[onclick="parseResume()"]');
+  const resultDiv = document.getElementById('parse-result');
+  if (!btn || !resultDiv) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing…';
+  fetch('/student/resume/parse', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Auto-parse skills';
+      if (data.error) {
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#fee2e2';
+        resultDiv.style.borderColor = '#fca5a5';
+        resultDiv.textContent = data.error;
+        return;
+      }
+      resultDiv.style.display = 'block';
+      resultDiv.style.background = '#f0fdf4';
+      resultDiv.style.borderColor = '#6ee7b7';
+      let html = '<strong>✅ Extracted from resume:</strong><br>';
+      if (data.skills) html += `<div style="margin-top:6px;"><b>Skills:</b> ${data.skills}</div>`;
+      if (data.exp_years > 0) html += `<div><b>Experience:</b> ~${data.exp_years} year(s)</div>`;
+      html += `<div style="margin-top:8px;display:flex;gap:8px;">
+        <button onclick="applyParsed(${JSON.stringify(data.skills)})" style="background:#4f46e5;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Apply to profile</button>
+      </div>`;
+      resultDiv.innerHTML = html;
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Auto-parse skills';
+    });
+}
+function applyParsed(skills) {
+  const skillInput = document.querySelector('input[name="skills"]');
+  if (skillInput && skills) skillInput.value = skills;
+  const editBtn = document.getElementById('edit-btn');
+  // open edit mode
+  const ev = document.getElementById('profile-view');
+  const ee = document.getElementById('profile-edit');
+  if (ee && ee.style.display === 'none') {
+    if (ev) ev.style.display = 'none';
+    ee.style.display = 'block';
+    if (editBtn) editBtn.innerHTML = '<i class="fa-solid fa-xmark" style="margin-right:4px;"></i>Cancel';
+  }
+  document.getElementById('parse-result').innerHTML += '<div style="color:#059669;font-weight:600;margin-top:6px;">✓ Skills filled — click Save Changes to update profile.</div>';
+}
+function toggleEditProfile() {
+  const v = document.getElementById('profile-view');
+  const e = document.getElementById('profile-edit');
+  const b = document.getElementById('edit-btn');
+  if (e.style.display === 'none') {
+    e.style.display = 'block'; v.style.display = 'none';
+    b.innerHTML = '<i class="fa-solid fa-xmark" style="margin-right:4px;"></i>Cancel';
+  } else {
+    e.style.display = 'none'; v.style.display = 'block';
+    b.innerHTML = '<i class="fa-solid fa-pen" style="margin-right:4px;"></i>Edit';
+  }
+}
+
 {% set total = status_counts.values()|sum %}
 {% if total > 0 %}
 (function(){
@@ -1314,5 +1465,40 @@ window._mySkills  = {{ skills_list | tojson }};
   });
 })();
 {% endif %}
+</script>
+
+<!-- Interview slot confirmation modal -->
+<div id="slot-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;max-width:420px;width:92%;box-shadow:0 24px 64px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-size:1rem;font-weight:700;color:#111827;">Confirm Interview Slot</h3>
+      <button onclick="closeSlotModal()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#9ca3af;">✕</button>
+    </div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:14px;">Select a slot from the options proposed by the recruiter:</p>
+    <form id="slot-form" method="POST">
+      <div id="slot-options" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary">Confirm Slot</button>
+        <button type="button" onclick="closeSlotModal()" class="btn btn-ghost">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function openSlotModal(idx, ivId, slots) {
+  const form = document.getElementById('slot-form');
+  form.action = '/student/interview/' + ivId + '/confirm';
+  const container = document.getElementById('slot-options');
+  container.innerHTML = '';
+  (slots || '').split(',').map(s => s.trim()).filter(Boolean).forEach((slot, i) => {
+    container.innerHTML += `<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e5f0;border-radius:9px;cursor:pointer;font-size:0.875rem;">
+      <input type="radio" name="slot" value="${slot}" ${i===0?'checked':''} style="accent-color:#4f46e5;">
+      ${slot}
+    </label>`;
+  });
+  document.getElementById('slot-modal').style.display = 'flex';
+}
+function closeSlotModal() { document.getElementById('slot-modal').style.display = 'none'; }
+document.getElementById('slot-modal').addEventListener('click', function(e){ if(e.target===this)closeSlotModal(); });
 </script>
 {% endblock %}

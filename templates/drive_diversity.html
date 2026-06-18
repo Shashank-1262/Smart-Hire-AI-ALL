@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>body{background:#f5f7ff!important}</style>
+{% endblock %}
+{% block nav %}
+  <a href="/drive/{{ drive.id }}/applicants" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Back</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:1100px;margin:0 auto;">
+  <h1 class="page-title"><i class="fa-solid fa-chart-pie" style="color:#7c3aed;margin-right:8px;"></i>Diversity & Skill-Gap Report</h1>
+  <p class="page-sub">{{ drive.title }} · {{ total }} total applicants</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;">
+    <!-- Gender chart -->
+    <div class="card" style="padding:20px;">
+      <div style="font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:14px;">Gender Distribution</div>
+      {% if gender %}
+      <div style="height:160px;"><canvas id="genderChart"></canvas></div>
+      <div style="margin-top:10px;">
+        {% for g in gender %}
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:4px 0;">
+          <span style="color:#374151;">{{ g.gender }}</span>
+          <span style="font-weight:700;color:#111827;">{{ g.cnt }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div style="text-align:center;padding:32px;color:#9ca3af;font-size:0.85rem;">No data.</div>{% endif %}
+    </div>
+
+    <!-- Branch chart -->
+    <div class="card" style="padding:20px;">
+      <div style="font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:14px;">Branch Breakdown</div>
+      {% if branch %}
+      <div style="height:160px;"><canvas id="branchChart"></canvas></div>
+      {% else %}<div style="text-align:center;padding:32px;color:#9ca3af;font-size:0.85rem;">No data.</div>{% endif %}
+    </div>
+
+    <!-- CGPA distribution -->
+    <div class="card" style="padding:20px;">
+      <div style="font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:14px;">CGPA Distribution</div>
+      <div style="height:160px;"><canvas id="cgpaChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Skill gap -->
+  <div class="card">
+    <div style="font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:16px;">Skill Coverage Among Applicants</div>
+    {% if skill_coverage %}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      {% for skill, data in skill_coverage.items() %}
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;">
+          <span style="font-weight:600;color:#374151;">{{ skill }}</span>
+          <span style="color:{% if data.pct >= 70 %}#059669{% elif data.pct >= 40 %}#d97706{% else %}#dc2626{% endif %};font-weight:700;">{{ data.count }} applicants ({{ data.pct }}%)</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar {% if data.pct >= 70 %}pb-green{% elif data.pct >= 40 %}pb-orange{% else %}pb-red{% endif %}"
+               style="width:{{ data.pct }}%;"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:#9ca3af;font-size:0.85rem;">No required skills defined for this drive.</p>
+    {% endif %}
+  </div>
+
+  <!-- Location diversity -->
+  {% if location %}
+  <div class="card" style="margin-top:20px;">
+    <div style="font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:14px;">Applicant Locations</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      {% for l in location %}
+      <span style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:20px;padding:4px 14px;font-size:0.78rem;font-weight:600;">
+        {{ l.location }} <span style="opacity:.7;">({{ l.cnt }})</span>
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+{% if gender %}
+new Chart(document.getElementById('genderChart'),{type:'doughnut',data:{
+  labels:{{ gender|map(attribute='gender')|list|tojson }},
+  datasets:[{data:{{ gender|map(attribute='cnt')|list|tojson }},backgroundColor:['#4f46e5','#ec4899','#d97706','#9ca3af'],borderWidth:2,borderColor:'#fff'}]
+},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}});
+{% endif %}
+{% if branch %}
+new Chart(document.getElementById('branchChart'),{type:'bar',data:{
+  labels:{{ branch|map(attribute='branch')|list|tojson }},
+  datasets:[{data:{{ branch|map(attribute='cnt')|list|tojson }},backgroundColor:'#4f46e5',borderRadius:4}]
+},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af'}},y:{beginAtZero:true,ticks:{font:{size:9},color:'#9ca3af'}}}}});
+{% endif %}
+const cgpaDist = {{ cgpa_dist|tojson }};
+new Chart(document.getElementById('cgpaChart'),{type:'bar',data:{
+  labels:Object.keys(cgpaDist),
+  datasets:[{data:Object.values(cgpaDist),backgroundColor:['#dc2626','#d97706','#4f46e5','#059669','#7c3aed'],borderRadius:4}]
+},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af'}},y:{beginAtZero:true,ticks:{font:{size:9},color:'#9ca3af'}}}}});
+</script>
+{% endblock %}

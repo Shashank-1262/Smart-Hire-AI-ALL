@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block nav %}
+  <a href="{% if session.get('role')=='admin' %}/admin{% else %}/company{% endif %}" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;font-weight:500;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Back</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:0 auto;">
+  <h1 class="page-title"><i class="fa-solid fa-file-signature" style="color:#4f46e5;"></i> Generate Offer / Joining Letter</h1>
+  <p class="page-sub">Fill in the details and choose a template to generate a downloadable PDF letter.</p>
+
+  <div class="card">
+    <form action="/offer/generate" method="POST">
+      <!-- Application selector -->
+      <div class="form-group">
+        <label>Select Application</label>
+        <select name="application_id" class="form-control" id="app-sel" onchange="prefillApp(this)">
+          <option value="">— Select candidate —</option>
+          {% for a in apps %}
+          <option value="{{ a['id'] }}" data-name="{{ a['name'] }}" data-role="{{ a['role'] }}">
+            {{ a['name'] }} — {{ a['role'] }}{% if a.get('company_name') %} @ {{ a['company_name'] }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Template selector -->
+      <div class="form-group">
+        <label>Letter Type</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          {% for val,lbl in [('offer','Offer Letter'),('joining','Joining Letter'),('appointment','Appointment Letter')] %}
+          <label style="display:flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid #e2e5f0;border-radius:10px;cursor:pointer;font-size:0.875rem;font-weight:500;transition:all .15s;" id="tpl-{{ val }}">
+            <input type="radio" name="letter_type" value="{{ val }}" {% if val=='offer' %}checked{% endif %} onchange="selectTpl('{{ val }}')" style="accent-color:#4f46e5;">
+            {{ lbl }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Template style -->
+      <div class="form-group">
+        <label>Letter Style</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          {% for val,lbl,clr in [('standard','Standard','#4f46e5'),('modern','Modern','#059669'),('minimal','Minimal','#374151'),('bold','Bold','#dc2626'),('executive','Executive','#7c3aed')] %}
+          <label id="tpl-style-{{ val }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid {% if (default_template or 'standard')==val %}{{ clr }}{% else %}#e2e5f0{% endif %};border-radius:10px;cursor:pointer;font-size:0.875rem;font-weight:500;background:{% if (default_template or 'standard')==val %}{{ clr }}11{% else %}#fff{% endif %};">
+            <span style="width:10px;height:10px;border-radius:50%;background:{{ clr }};flex-shrink:0;display:inline-block;"></span>
+            <input type="radio" name="template" value="{{ val }}" {% if (default_template or 'standard')==val %}checked{% endif %} style="display:none;" onchange="selectTplStyle('{{ val }}','{{ clr }}')">
+            {{ lbl }}
+          </label>
+          {% endfor %}
+        </div>
+        {% if brand_color %}
+        <input type="hidden" name="brand_color" id="brand-color-field" value="{{ brand_color }}">
+        <div style="margin-top:8px;font-size:0.78rem;color:#6b7280;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{{ brand_color }};border:1px solid #e2e5f0;"></span>
+          Company brand color will be applied to the PDF
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="g2">
+        <div class="form-group">
+          <label>Candidate Name</label>
+          <input type="text" name="candidate_name" id="f-name" class="form-control" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label>Role / Designation</label>
+          <input type="text" name="role" id="f-role" class="form-control" placeholder="e.g. Software Engineer" required>
+        </div>
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" name="company_name" class="form-control" value="{{ company['name'] if company else '' }}" placeholder="Company name" required>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" name="department" class="form-control" placeholder="e.g. Engineering">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" class="form-control" value="{{ company['location'] if company else '' }}" placeholder="Office location">
+        </div>
+        <div class="form-group">
+          <label>CTC / Salary</label>
+          <input type="text" name="salary" class="form-control" placeholder="e.g. ₹8,00,000 per annum" required>
+        </div>
+        <div class="form-group">
+          <label>Date of Joining</label>
+          <input type="date" name="joining_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Employment Type</label>
+          <select name="job_type" class="form-control">
+            {% for jt in ['Full-time','Part-time','Internship','Contract'] %}
+            <option>{{ jt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>HR Name (signatory)</label>
+          <input type="text" name="hr_name" class="form-control" placeholder="HR Manager name">
+        </div>
+        <div class="form-group">
+          <label>HR Title</label>
+          <input type="text" name="hr_title" class="form-control" value="Human Resources" placeholder="e.g. HR Manager">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Company Address</label>
+        <input type="text" name="company_address" class="form-control" placeholder="Full address">
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-file-pdf"></i> Generate PDF</button>
+        <a href="{% if session.get('role')=='admin' %}/admin{% else %}/company{% endif %}" class="btn btn-ghost btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function prefillApp(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (opt.value) {
+    document.getElementById('f-name').value = opt.dataset.name || '';
+    document.getElementById('f-role').value = opt.dataset.role || '';
+  }
+}
+const TPL_COLORS = {standard:'#4f46e5',modern:'#059669',minimal:'#374151',bold:'#dc2626',executive:'#7c3aed'};
+function selectTplStyle(val, clr) {
+  ['standard','modern','minimal','bold','executive'].forEach(function(t) {
+    const el = document.getElementById('tpl-style-'+t);
+    if (!el) return;
+    const c = TPL_COLORS[t] || '#4f46e5';
+    el.style.borderColor = (t===val) ? c : '#e2e5f0';
+    el.style.background  = (t===val) ? c+'18' : '#fff';
+    el.querySelector('input').checked = (t===val);
+  });
+  const bcf = document.getElementById('brand-color-field');
+  if (bcf) bcf.value = clr;
+}
+function selectTpl(val) {
+  ['offer','joining','appointment'].forEach(function(t) {
+    const el = document.getElementById('tpl-'+t);
+    if (!el) return;
+    el.style.borderColor = (t===val) ? '#4f46e5' : '#e2e5f0';
+    el.style.background  = (t===val) ? '#eef2ff' : '';
+  });
+}
+selectTpl('offer');
+</script>
+{% endblock %}

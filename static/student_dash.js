@@ -2,8 +2,18 @@
 function showSection(name) {
   document.querySelectorAll('.sd-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sd-sidebar .nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
+  const sec = document.getElementById('section-' + name);
+  const nav = document.getElementById('nav-' + name);
+  if (sec) sec.classList.add('active');
+  if (nav) nav.classList.add('active');
+  if (name === 'notifications') markRead();
+}
+
+function markRead() {
+  fetch('/student/notifications/read', {method:'POST'})
+    .then(() => {
+      document.querySelectorAll('[id^="nav-notifications"] span').forEach(e => e.remove());
+    });
 }
 
 // ── Applications tab switcher ─────────────────────────────────────────────────

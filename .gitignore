@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.vscode/
+static/uploads/
+_test_routes.py
+_test_logged_in.py
+_debug_500.py
+_check_db.py
+features_ext.py
