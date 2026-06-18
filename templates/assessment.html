@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+body{background:#f5f7ff!important}
+.opt-label{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e5f0;border-radius:9px;cursor:pointer;font-size:0.875rem;margin-bottom:8px;transition:all .15s}
+.opt-label:hover{border-color:#4f46e5;background:#eef2ff}
+.opt-label input[type=radio]:checked+span{color:#4f46e5;font-weight:600}
+</style>
+{% endblock %}
+{% block nav %}
+  <a href="/student" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;">Dashboard</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:0 auto;">
+  {% if already %}
+  <div class="card" style="text-align:center;padding:48px;">
+    <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#059669;margin-bottom:16px;display:block;"></i>
+    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:8px;">Assessment Already Submitted</h2>
+    <p style="color:#6b7280;">Your score: <strong style="color:#4f46e5;">{{ already['score'] }}%</strong></p>
+    <a href="/student?section=applications" class="btn btn-primary" style="margin-top:20px;">View Applications</a>
+  </div>
+  {% else %}
+  <div style="margin-bottom:20px;">
+    <h1 class="page-title">{{ assessment['title'] }}</h1>
+    <p class="page-sub">{{ drive['title'] }} · {{ questions|length }} questions · {{ assessment['time_limit'] }} min · Pass: {{ assessment['passing_score'] }}%</p>
+  </div>
+  <form action="/assessment/{{ drive['id'] }}/submit" method="POST" id="assess-form">
+    {% for q in questions %}
+    {% set i = loop.index0 %}
+    <div class="card" style="margin-bottom:16px;padding:22px;">
+      <div style="font-size:0.72rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Question {{ loop.index }}</div>
+      <div style="font-size:1rem;font-weight:600;color:#111827;margin-bottom:16px;">{{ q.text }}</div>
+      {% for opt in q.options %}{% if opt %}
+      <label class="opt-label">
+        <input type="radio" name="q{{ i }}" value="{{ opt }}" style="accent-color:#4f46e5;">
+        <span>{{ opt }}</span>
+      </label>
+      {% endif %}{% endfor %}
+    </div>
+    {% endfor %}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px;">
+      <div id="timer" style="font-size:1.1rem;font-weight:700;color:#111827;background:#fff;border:1px solid #e2e5f0;border-radius:9px;padding:8px 18px;"></div>
+      <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-paper-plane"></i> Submit Assessment</button>
+    </div>
+  </form>
+  <script>
+  let secs = {{ assessment['time_limit'] * 60 }};
+  const el = document.getElementById('timer');
+  const tick = setInterval(() => {
+    secs--;
+    const m = Math.floor(secs/60), s = secs%60;
+    el.textContent = m + ':' + (s<10?'0':'') + s;
+    el.style.color = secs < 120 ? '#dc2626' : '#111827';
+    if (secs <= 0) { clearInterval(tick); document.getElementById('assess-form').submit(); }
+  }, 1000);
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

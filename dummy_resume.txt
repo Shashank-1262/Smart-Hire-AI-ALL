@@ -1,0 +1,14 @@
+Arjun Sharma
+Email: arjun.sharma@student.edu
+Phone: 9876543210
+
+Skills:
+- Programming: Python, Java, SQL
+- Frameworks: Django, Flask
+- Tools: Git, Docker
+- Academic: CGPA 8.7, B.Tech in Computer Science
+
+Experience:
+- Software Engineering Intern at TechCorp (3 months)
+  * Developed web APIs using Flask and Django
+  * Optimized SQL queries to improve response times by 20%

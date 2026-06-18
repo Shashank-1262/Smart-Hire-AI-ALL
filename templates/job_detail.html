@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+body{background:#f5f7ff!important}
+.jd-wrap{display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:start}
+@media(max-width:860px){.jd-wrap{grid-template-columns:1fr}}
+.jd-card{background:#fff;border:1px solid #e2e5f0;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.jd-logo{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;font-size:1.5rem;font-weight:800;color:#fff;flex-shrink:0}
+.jd-tag{display:inline-flex;align-items:center;gap:5px;background:#f5f7ff;border:1px solid #e2e5f0;
+  border-radius:20px;padding:5px 14px;font-size:0.8rem;color:#374151}
+.jd-section{margin-top:22px;padding-top:20px;border-top:1px solid #f3f4f6}
+.jd-section h3{font-size:0.9rem;font-weight:700;color:#111827;margin-bottom:12px}
+.jd-section p,.jd-section li{font-size:0.875rem;color:#374151;line-height:1.8}
+.jd-section ul{padding-left:20px}
+.apply-card{position:sticky;top:90px}
+</style>
+{% endblock %}
+{% block nav %}
+  <a href="/jobs" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;font-weight:500;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Job Board</a>
+  {% if session.get('role')=='student' %}<a href="/student" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;font-weight:500;">Dashboard</a>{% endif %}
+  {% if not session.get('role') %}<a href="/login" class="btn btn-primary btn-sm">Login to Apply</a>
+  {% else %}<a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>{% endif %}
+{% endblock %}
+{% block content %}
+<div style="padding:0">
+<div class="jd-wrap">
+  <!-- Left: Job details -->
+  <div>
+    <div class="jd-card">
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div class="jd-logo" style="background:#4f46e5;">{{ job.company_name[0].upper() }}</div>
+        <div>
+          <h1 style="font-size:1.3rem;font-weight:800;color:#111827;margin-bottom:4px;">{{ job.title }}</h1>
+          <div style="font-size:0.9rem;color:#6b7280;margin-bottom:12px;">{{ job.company_name }} · {{ job.industry }}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <span class="jd-tag"><i class="fa-solid fa-location-dot" style="color:#9ca3af;"></i>{{ job.location }}</span>
+            {% if job.salary_min and job.salary_max and job.salary_min != job.salary_max %}
+            <span class="jd-tag"><i class="fa-solid fa-indian-rupee-sign" style="color:#9ca3af;"></i>{{ job.salary_min|int }}–{{ job.salary_max|int }} LPA</span>
+            {% elif job.salary %}
+            <span class="jd-tag"><i class="fa-solid fa-indian-rupee-sign" style="color:#9ca3af;"></i>{{ job.salary }} LPA</span>
+            {% endif %}
+            {% if job.job_type %}<span class="jd-tag"><i class="fa-solid fa-briefcase" style="color:#9ca3af;"></i>{{ job.job_type }}</span>{% endif %}
+            {% if job.experience_level %}<span class="jd-tag"><i class="fa-solid fa-layer-group" style="color:#9ca3af;"></i>{{ job.experience_level }}</span>{% endif %}
+            <span style="background:#d1fae5;color:#059669;border-radius:20px;padding:5px 14px;font-size:0.8rem;font-weight:700;">Active</span>
+          </div>
+        </div>
+      </div>
+
+      {% if job.description %}
+      <div class="jd-section">
+        <h3>Job Description</h3>
+        <p style="white-space:pre-line;">{{ job.description }}</p>
+      </div>
+      {% endif %}
+
+      {% if job.requirements %}
+      <div class="jd-section">
+        <h3>Requirements</h3>
+        <p style="white-space:pre-line;">{{ job.requirements }}</p>
+      </div>
+      {% endif %}
+
+      <div class="jd-section">
+        <h3>Eligibility Criteria</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          {% if job.req_cgpa %}<div style="background:#f8f9ff;border-radius:9px;padding:12px 14px;font-size:0.85rem;"><div style="color:#9ca3af;font-size:0.7rem;margin-bottom:4px;">MIN CGPA</div><strong>{{ job.req_cgpa }}</strong></div>{% endif %}
+          {% if job.req_degree %}<div style="background:#f8f9ff;border-radius:9px;padding:12px 14px;font-size:0.85rem;"><div style="color:#9ca3af;font-size:0.7rem;margin-bottom:4px;">DEGREE</div><strong>{{ job.req_degree }}</strong></div>{% endif %}
+          {% if job.req_skills %}<div style="background:#f8f9ff;border-radius:9px;padding:12px 14px;font-size:0.85rem;grid-column:1/-1;"><div style="color:#9ca3af;font-size:0.7rem;margin-bottom:8px;">REQUIRED SKILLS</div><div style="display:flex;flex-wrap:wrap;gap:6px;">{% for s in job.req_skills.split(',') %}<span style="background:#eef2ff;color:#4f46e5;border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:600;">{{ s.strip() }}</span>{% endfor %}</div></div>{% endif %}
+          <div style="background:#f8f9ff;border-radius:9px;padding:12px 14px;font-size:0.85rem;"><div style="color:#9ca3af;font-size:0.7rem;margin-bottom:4px;">APPLICATION DEADLINE</div><strong>{{ job.deadline }}</strong></div>
+          <div style="background:#f8f9ff;border-radius:9px;padding:12px 14px;font-size:0.85rem;"><div style="color:#9ca3af;font-size:0.7rem;margin-bottom:4px;">APPLICANTS</div><strong>{{ app_count }}</strong></div>
+        </div>
+      </div>
+
+      {% if job.company_about %}
+      <div class="jd-section">
+        <h3>About {{ job.company_name }}</h3>
+        <p>{{ job.company_about }}</p>
+        {% if job.website %}<a href="{{ job.website }}" target="_blank" style="font-size:0.82rem;color:#4f46e5;font-weight:600;text-decoration:none;">Visit Website →</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: Apply card -->
+  <div class="apply-card">
+    <div class="jd-card">
+      <div style="font-size:1rem;font-weight:700;color:#111827;margin-bottom:16px;">Apply for this Job</div>
+      {% if session.get('role') == 'student' %}
+        {% if already_applied %}
+        <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:14px;text-align:center;font-size:0.85rem;color:#059669;font-weight:600;margin-bottom:16px;">
+          <i class="fa-solid fa-circle-check"></i> Already Applied!
+        </div>
+        <a href="/student?section=applications" class="btn btn-ghost btn-block">View My Applications</a>
+        {% else %}
+        <form action="/apply/{{ job.id }}" method="POST">
+          <div class="form-group">
+            <label style="font-size:0.8rem;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Cover Letter (optional)</label>
+            <textarea name="cover_letter" class="form-control" rows="4" placeholder="Why are you a good fit for this role?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            <i class="fa-solid fa-paper-plane"></i> Apply Now
+          </button>
+        </form>
+        {% endif %}
+      {% elif session.get('role') %}
+      <div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:16px 0;">
+        Only students can apply.
+      </div>
+      {% else %}
+      <p style="font-size:0.85rem;color:#6b7280;margin-bottom:16px;">Create a free account to apply for this position.</p>
+      <a href="/register/student" class="btn btn-primary btn-block" style="margin-bottom:10px;">Create Student Account</a>
+      <a href="/login" class="btn btn-ghost btn-block">I already have an account</a>
+      {% endif %}
+
+      <hr style="border:none;border-top:1px solid #f3f4f6;margin:20px 0;">
+      <div style="font-size:0.8rem;color:#6b7280;">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span>Posted</span><strong style="color:#111827;">{{ job.created[:10] }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span>Deadline</span><strong style="color:#dc2626;">{{ job.deadline }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span>Employment</span><strong style="color:#111827;">{{ job.job_type or 'Full-time' }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

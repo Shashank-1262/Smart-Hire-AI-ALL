@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+body{background:#f5f7ff!important}
+.pipeline-steps{display:flex;gap:0;align-items:center;flex-wrap:nowrap;overflow-x:auto;padding:4px 0;}
+.step{display:flex;align-items:center;gap:0;}
+.step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;border:2px solid;}
+.step-line{width:32px;height:2px;flex-shrink:0;}
+.step-done .step-dot{background:#059669;border-color:#059669;color:#fff;}
+.step-active .step-dot{background:#4f46e5;border-color:#4f46e5;color:#fff;}
+.step-pending .step-dot{background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;}
+.step-done .step-line{background:#059669;}
+.step-active .step-line, .step-pending .step-line{background:#d1d5db;}
+.step-rejected .step-dot{background:#dc2626;border-color:#dc2626;color:#fff;}
+.app-card{background:#fff;border:1px solid #e2e5f0;border-radius:14px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+</style>
+{% endblock %}
+{% block nav %}
+  <a href="/student" style="color:var(--muted);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:0.875rem;"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>Dashboard</a>
+  <a href="/logout" class="btn-nav"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:1000px;margin:0 auto;">
+  <h1 class="page-title"><i class="fa-solid fa-route" style="color:#4f46e5;margin-right:8px;"></i>Application Tracker</h1>
+  <p class="page-sub">Track all your applications and their real-time status in one place.</p>
+
+  {% set COLORS = ['#4285f4','#ea4335','#fbbc05','#34a853','#ff6900','#0078d4','#7c3aed','#0891b2'] %}
+  {% set STEPS = ['applied','eligible','test','interview','selected'] %}
+
+  {% if apps %}
+  {% for a in apps %}
+  <div class="app-card">
+    <div style="display:flex;align-items:flex-start;gap:16px;">
+      <div style="width:46px;height:46px;border-radius:12px;background:{{ COLORS[loop.index0 % COLORS|length] }};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0;">
+        {{ a.company_name[0].upper() }}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="font-size:1rem;font-weight:700;color:#111827;">{{ a.title }}</span>
+          <span style="font-size:0.82rem;color:#6b7280;">{{ a.company_name }}</span>
+          <span style="font-size:0.75rem;background:#eef2ff;color:#4f46e5;padding:2px 10px;border-radius:20px;font-weight:600;">{{ a.job_type }}</span>
+        </div>
+        <div style="display:flex;gap:10px;font-size:0.78rem;color:#6b7280;flex-wrap:wrap;margin-bottom:14px;">
+          <span><i class="fa-solid fa-location-dot" style="margin-right:3px;"></i>{{ a.job_loc }}</span>
+          <span><i class="fa-solid fa-calendar-days" style="margin-right:3px;"></i>Applied {{ a.applied_on[:10] }}</span>
+          <span><i class="fa-solid fa-star" style="color:#d97706;margin-right:3px;"></i>AI Match: {{ a.ai_score }}%</span>
+          {% if a.assess_score %}<span><i class="fa-solid fa-clipboard-check" style="color:#059669;margin-right:3px;"></i>Assessment: {{ a.assess_score }}%</span>{% endif %}
+        </div>
+
+        <!-- Pipeline progress bar -->
+        {% if a.status == 'rejected' %}
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;">
+          <span style="background:#fee2e2;color:#dc2626;padding:4px 14px;border-radius:20px;font-weight:700;">✗ Application Rejected</span>
+        </div>
+        {% else %}
+        <div class="pipeline-steps">
+          {% for s in STEPS %}
+          {% set is_done   = (STEPS.index(s) < STEPS.index(a.status)) if a.status in STEPS else false %}
+          {% set is_active = (s == a.status) %}
+          <div class="step {% if is_done %}step-done{% elif is_active %}step-active{% else %}step-pending{% endif %}">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div class="step-dot">
+                {% if is_done %}<i class="fa-solid fa-check" style="font-size:0.7rem;"></i>
+                {% elif is_active %}<i class="fa-solid fa-circle" style="font-size:0.5rem;"></i>
+                {% else %}<span style="font-size:0.65rem;">{{ loop.index }}</span>{% endif %}
+              </div>
+              <span style="font-size:0.6rem;font-weight:600;color:{% if is_done %}#059669{% elif is_active %}#4f46e5{% else %}#9ca3af{% endif %};white-space:nowrap;">{{ s|capitalize }}</span>
+            </div>
+            {% if not loop.last %}<div class="step-line {% if is_done %}step-done{% else %}step-pending{% endif %}"></div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Interview slot if any -->
+        {% if a.confirmed_slot %}
+        <div style="margin-top:10px;background:#d1fae5;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#059669;font-weight:600;">
+          <i class="fa-solid fa-calendar-check"></i> Interview confirmed: {{ a.confirmed_slot }}
+          {% if a.video_link %}
+          <a href="{{ a.video_link }}" target="_blank" style="margin-left:12px;background:#4f46e5;color:#fff;padding:3px 12px;border-radius:6px;text-decoration:none;font-size:0.78rem;">
+            <i class="fa-solid fa-video"></i> Join
+          </a>
+          {% endif %}
+        </div>
+        {% elif a.proposed_slots and a.status == 'interview' %}
+        <div style="margin-top:10px;background:#fef3c7;border-radius:8px;padding:8px 14px;font-size:0.82rem;color:#d97706;font-weight:600;">
+          <i class="fa-solid fa-clock"></i> Interview slots proposed — <a href="/student?section=applications" style="color:#4f46e5;">Confirm your slot</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="card" style="text-align:center;padding:64px 20px;color:#9ca3af;">
+    <i class="fa-solid fa-route" style="font-size:3rem;opacity:.3;display:block;margin-bottom:14px;"></i>
+    <p style="font-size:1rem;">No applications yet. Start applying to jobs on the <a href="/jobs" style="color:#4f46e5;font-weight:600;">Job Board</a>.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+.offer-preview{background:#fff;border:1px solid #e2e5f0;border-radius:12px;padding:36px;max-width:640px;margin:0 auto;}
+.sign-box{border:2px dashed #c7d2fe;border-radius:12px;background:#f8f9ff;padding:28px;text-align:center;margin:24px 0;}
+</style>
+{% endblock %}
+{% block nav %}{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+  {% if sig.signed %}
+  <div class="card" style="text-align:center;padding:48px;">
+    <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#059669;display:block;margin-bottom:16px;"></i>
+    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:8px;">Already Signed</h2>
+    <p style="color:#6b7280;">This offer letter was signed on {{ sig.signed_on[:10] }}.</p>
+  </div>
+  {% else %}
+  <div class="offer-preview">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#111827;">{{ offer.company_name }}</div>
+      <div style="font-size:0.82rem;color:#6b7280;margin-top:4px;">Offer Letter</div>
+    </div>
+    <div style="background:#eef2ff;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+      <p style="font-size:0.9rem;color:#374151;">Dear <strong>{{ offer.candidate_name }}</strong>,</p>
+      <p style="font-size:0.85rem;color:#374151;margin-top:8px;">
+        We are pleased to formally offer you the position of <strong>{{ offer.role }}</strong> at
+        <strong>{{ offer.company_name }}</strong> with a CTC of <strong>{{ offer.salary }}</strong>.
+        Your joining date is <strong>{{ offer.joining_date }}</strong>.
+      </p>
+    </div>
+    <table style="width:100%;font-size:0.85rem;border-collapse:collapse;">
+      {% for label, val in [('Role', offer.role),('Salary / CTC', offer.salary),('Date of Joining', offer.joining_date),('Generated On', offer.generated_on[:10])] %}
+      <tr style="border-bottom:1px solid #f3f4f6;">
+        <td style="padding:8px 0;color:#6b7280;font-weight:500;width:40%;">{{ label }}</td>
+        <td style="padding:8px 0;font-weight:600;color:#111827;">{{ val }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div class="sign-box">
+      <i class="fa-solid fa-signature" style="font-size:2rem;color:#4f46e5;opacity:.6;display:block;margin-bottom:10px;"></i>
+      <p style="font-size:0.9rem;color:#374151;margin-bottom:6px;">By clicking <strong>Accept & Sign</strong>, you confirm that you accept this offer.</p>
+      <p style="font-size:0.78rem;color:#9ca3af;margin-bottom:16px;">Your digital signature will be recorded with timestamp and IP address.</p>
+      <form action="/offer/sign/{{ sig.token }}" method="POST">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-pen-nib"></i> Accept & Sign Offer
+        </button>
+      </form>
+    </div>
+
+    <p style="font-size:0.75rem;color:#9ca3af;text-align:center;">
+      This link is unique and can only be used once. If you have any questions, contact your HR representative.
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
